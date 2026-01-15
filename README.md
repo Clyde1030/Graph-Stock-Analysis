@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="images/stock_image.png" alt="Analyzing Congressional Stock Transaction with Graph Algorithms" width="900"/>
+  <img src="images/GraphStock.png" alt="Analyzing Congressional Stock Transaction with Graph Algorithms" width="800"/>
 </p>
 
 <p align="center">
-  Check out our <a href="slides/205%20Final%20Presentation.pdf">presentation</a> &nbsp; | &nbsp;
+  Check out our <a href="slides/Presentation%20-%20Project%203.pdf">presentation</a> &nbsp; | &nbsp;
   Read our <a href="">Medium article</a>
 </p>
 
