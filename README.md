@@ -8,83 +8,77 @@
 </p>
 
 # Analyzing Congressional Stock Transaction with Graph Algorithms
+**Team:** Yusheng Lee, Kobby Hanson, Maxwell Bowman, William Crosby
 
 ## Overview
-We model diversification as a **graph problem** over NASDAQ-100 equities. Stocks become nodes; edges encode **statistical similarity** (price co-movement, volume behavior) to surface **clusters, influence, and bridge stocks** that matter for portfolio construction. We compute five complementary signals:
+This project investigates anomalous congressional equity trading behavior using graph-based network analysis. By modeling transactional properties (including representative, its affliated party, ticker, industry) as nodes and trading similarities as weighted edges, we apply community detection and centrality algorithms to surface unusual trading patterns that may warrant further investigation.
 
-- **Pearson correlation** (price co-movement)
-- **Louvain modularity** (communities/sectors that move together)
-- **Jaccard similarity** (co-occurrence in volume regimes to encourage spread)
-- **Betweenness centrality** (bridge stocks spanning communities)
-- **PageRank** (influence within the correlation network)
+Core Algorithms:
+- **Betweenness centrality** (highlights tickers and its affliated parties)
+- **Louvain Modularity** (communities/sectors that move together)
+- **PageRank** (ranks representatives by influence within the trading network)
 
-We also outline how a **real-time path** could work with **Redis** for price streams and **MongoDB** for flexible per-ticker analytics snapshots (keys: similar/dissimilar lists, scores, community id).
+Why Redis and MongoDB?
 
-**Team:** Yusheng Lee, Kobby Hanson, Maxwell Bowman, William Crosby
+- MongoDB
+    - Stores semi-structured transaction records efficiently
+    - Flexible schema supports evolving financial disclosures
+    - Ideal for historical querying and aggregation of trading events
+- Redis
+    - Used as a low-latency cache for intermediate graph results
+    - Accelerates repeated centrality computations and similarity lookups
+    - Suitable for real-time or interactive analytical workflows
+
+
 
 ## Methodology
 
-### 1) Data shaping
-- Pull daily OHLCV for NASDAQ-100; standardize tickers and trading days
-- Build a tidy panel: `(ticker, date, close, volume)`
-- Optional: filter to a representative sub-universe for clarity (`data/sub_nasdaq100.csv`)
+### 1) Data
+Data Source
+- U.S. Congressional equity transaction disclosures (CSV-based ingestion) from the [House Stock Watcher API](https://housestockwatcher.com/api), 
+- Publicly available transaction records
 
-### 2) Graph construction
-- Compute **Pearson ρ** for each pair on closing prices (aligned dates)
-- Build an undirected edge if `|ρ|` exceeds a threshold:
-  - `ρ ≥ +0.80` → **strong positive** (move together)
-  - `|ρ| ≤ 0.20` → **weak/uncorrelated**
-  - `ρ ≤ −0.80` → **strong negative** (inverse movement)
-- For **Jaccard**, bucket daily volume into **Low / Medium / High** and compare set overlap of volume regimes between tickers.
+Description
+Each record represents a disclosed equity transaction made by a congressional representative, including asset, transaction type, and transaction date.
 
-### 3) Algorithms & what they tell us
-- **Pearson correlation:** identifies **substitutes** (positively correlated) and **hedges** (negatively correlated).
-- **Louvain communities:** reveals **natural clusters** (often sector-like), used to balance exposure across groups.
-- **Jaccard (volume):** pushes diversification across **trading-behavior regimes**, not just price paths.
-- **Betweenness:** finds **bridges** connecting clusters; useful to avoid concentration in “choke points.”
-- **PageRank:** highlights **structurally influential** names within the correlation network.
+Important Columns
+- representative – congressional member name or ID
+- ticker – traded equity symbol
+- transaction_date
+- transaction_type – buy / sell
+- amount_range – disclosed trade size bucket
+- party – political affiliation
+- state – representative’s state
 
-## Repository Map
+Initial preprocessing includes:
+- Deduplication
+- Null handling
+- Standardization of tickers and names
+- Transaction aggregation at the representative level
 
-### `code/` (analysis notebooks)
-- `nasdaq100_eda.ipynb` — quick universe + sanity checks
-- `Pearson_Correlation.ipynb` — compute ρ matrix; export high/low/negative edge lists
-- `Louvain_Algorithm_Sub_Nasaq1....ipynb` — community detection over the correlation graph
-- `Page_Rank_Algorithm_Sub_Nas...ipynb` — influence scoring
-- `Betweenness.ipynb` — bridge/flow importance
-- `jaccard_similarity.ipynb` — volume-bucket similarity
-- `load_to_mongo.ipynb` — example document upsert pattern for per-ticker analytics
 
-### `data/` (small, portfolio-safe artifacts and results)
-- `sub_nasdaq100.csv` — subset universe used in demos
-- `pearson_high_correlation_0.8_or...csv` — edges for strong positive pairs
-- `pearson_low_correlation_0.2_or...csv` — near-uncorrelated pairs
-- `pearson_high_negative_correlation...csv` — strong negative pairs
-- `louvain_communities_full.csv` — `(ticker, community_id)`
-- `pagerank_results_full.csv`, `betweenness_results_full.csv` — node scores
-- `jaccard_similarity.csv` — volume-regime similarity outputs
+### 2) Graph Construction and What Algorithms Tell US
 
-> Large raw files and classroom datasets were removed.
-
-### `images/`
-- Graph views (used in Slides)
-
-### `slides/`
-- `205 Final Presentation.pdf` — project deck (linked at top of repo)
-
-## Data
-- Source: Publicly available NASDAQ-100 and sector classification data
-- Note: Large raw data files (e.g., NASDAQ_100_Data_From_2010.csv) were removed.
-  - The sub_nasdaq100.csv is our smaller demonstration sample.
+|    Algorithm     | Betweenness | Louvain | PageRank |
+| ---------------- | ----------- | ------- | -------- |
+| Node Definition  |             |         |          |        
+| Edge Definition  |             |         |          |
+| Edge Weighting   |             |         |          |
+| Graph Storage    |             |         |          |
+| What They Tell US|             |         |          |
  
-## Tools & Technologies
-- Neo4j – Graph database for data modeling and querying
-- Cypher – Query language for relationships and network patterns
-- Python – Automates CSV imports and graph population
-- Pandas & NetworkX – For data prep and correlation analysis
+### 3) Tools and Technology
+- psycopg2, pandas, numpy: data manipulation
+- Neo4j: Graph storage and algorithm execution
+- MongoDB: Transaction-level data persistence
+- Redis: Caching graph relationships and metrics
+- Jupyter Notebook
 
-## Notes & limits
-- Correlation ≠ causation; signals reflect co-movement, not fundamentals
-- Thresholds (e.g., ±0.80, 0.20) are tunable—trade off coverage vs. noise
-- Consider rolling windows to avoid stale relationships
-- Use sector/industry metadata as priors rather than hard rules
+### 4) Notes and Limitations
+- Transaction amounts are disclosed in ranges, limiting precision
+- Similarity does not imply causality or wrongdoing
+- Temporal alignment is approximate due to reporting delays
+- Graph-based methods are sensitive to:
+  - Edge weighting assumptions
+  - Similarity thresholds
+- Results should be interpreted as signals for further investigation, not conclusions
