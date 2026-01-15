@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/GraphStock.png" alt="Analyzing Congressional Stock Transaction with Graph Algorithms" width="800"/>
+  <img src="slides/GraphStock.png" alt="Analyzing Congressional Stock Transaction with Graph Algorithms" width="800"/>
 </p>
 
 <p align="center">
