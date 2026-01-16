@@ -7,91 +7,185 @@
   Read our <a href="">Medium article</a>
 </p>
 
-# Analyzing Congressional Stock Transaction with Graph Algorithms
+# Analyzing Congressional Stock Transactions with Graph Algorithms
 **Team:** Yusheng Lee, Kobby Hanson, Maxwell Bowman, William Crosby
 
-## Overview
-This project investigates anomalous congressional equity trading behavior using graph-based network analysis. By modeling transactional properties (including representative, its affliated party, ticker, industry) as nodes and trading similarities as weighted edges, we apply community detection and centrality algorithms to visualize representative trading behavior that may worth further investigation.
+---
 
-Core Algorithms:
-- **Betweenness centrality**
+## Overview
+
+This project investigates **anomalous congressional equity trading behavior** using **graph-based network analysis**. By modeling transactional attributes—such as representatives, political affiliation, stock tickers, industries, and sectors—as nodes, and encoding trading similarities as weighted edges, we apply community detection and centrality algorithms to surface structural patterns that may warrant further investigation.
+
+### Core Algorithms
+- **Betweenness Centrality**
 - **Louvain Modularity**
 - **PageRank**
 
-Why Redis and MongoDB?
+### Why Redis and MongoDB?
 
-- MongoDB
-    - Stores semi-structured transaction records efficiently
-    - Flexible schema supports evolving financial disclosures
-    - Ideal for historical querying and aggregation of trading events
-- Redis
-    - Used as a low-latency cache for intermediate graph results
-    - Accelerates repeated centrality computations and similarity lookups
-    - Suitable for real-time or interactive analytical workflows
+**MongoDB**
+- Efficient storage of semi-structured transaction records  
+- Flexible schema supports evolving financial disclosure formats  
+- Well-suited for historical querying and aggregation of trading events  
 
+**Redis**
+- Low-latency caching for intermediate graph results  
+- Accelerates repeated centrality computations and similarity lookups  
+- Enables interactive or near–real-time analytical workflows  
 
+---
 
 ## Methodology
 
 ### 1) Data
-Data Source
-- U.S. Congressional equity transaction disclosures (CSV-based ingestion) from the [House Stock Watcher API](https://housestockwatcher.com/api), 
+
+#### Data Source
+- U.S. Congressional equity transaction disclosures (CSV-based ingestion)
+- Retrieved from the [House Stock Watcher API](https://housestockwatcher.com/api)
 - Publicly available transaction records
 
-Description
-Each record represents a disclosed equity transaction made by a congressional representative, including asset, transaction type, and transaction amount.
+#### Description
+Each record represents a disclosed equity transaction made by a congressional representative.
 
-Important Columns
-- transaction_date
-- representative – congressional member name or ID
-- state – representative’s state
-- ticker – traded equity symbol		
-- industry
-- sector
-- party – political affiliation
-- transaction_type – buy / sell
-- amount_range – disclosed trade size bucket
+#### Important Columns
+- `transaction_date`
+- `representative` – congressional member name or ID  
+- `state` – representative’s state  
+- `ticker` – traded equity symbol  
+- `industry`
+- `sector`
+- `party` – political affiliation  
+- `transaction_type` – buy / sell  
+- `amount_range` – disclosed trade size bucket  
 
-Initial preprocessing includes:
-- Deduplication
-- Null handling
-- Standardization of tickers and names
-- Transaction aggregation at the representative level
+#### Preprocessing Steps
+- Deduplication  
+- Null handling  
+- Standardization of representative names and tickers  
+- Transaction aggregation at the representative level  
 
+---
 
-### 2) Graph Construction and What Algorithms Tell US
+### 2) Graph Construction and What the Algorithms Tell Us
+
 #### Louvain Modularity
 
-Louvain will try different grouping methods and assign the nodes to the best groupings based on their weights and densities, thereby measuring how well a node is assigned to a group. In our case, we use Louvain to summarize transactions into clusters and measure the similarity between these transactions based on their `industry`, `sector`, and political affiliation (`party` and `state`).
+Louvain modularity iteratively assigns nodes into communities by maximizing edge density within groups relative to the overall graph. In this project, Louvain is used to **summarize trading behavior into clusters** based on similarity across political and industry dimensions.
 
-Base Graph:
-representative [traded] Ticker [belongs to] Industry [belongs to] Sector
+**Graph Construction Logic**
+Representative ── traded ──> Ticker ── belongs to ──> Industry ── belongs to ──> Sector
 
-Weighting Methods:
-Create a [similar_to] edge between representatives to account for
-  - political affliation:
-    - same party
-    - same state
-  - industry and sector:
-    - weighted by transaction count
+
+**Weighting Strategy**
+A `SIMILAR_TO` edge is created between representatives based on:
+- **Political affiliation**
+  - Same party
+  - Same state
+- **Industry and sector exposure**
+  - Weighted by transaction frequency
+
+This enables identification of representative clusters with similar trading profiles and political alignment.
+
+---
 
 #### Betweenness Centrality
 
+Betweenness centrality is applied as a **targeted anomaly signal**, highlighting representatives or assets that bridge otherwise weakly connected trading clusters.
+
+##### Graph Construction Process
+
+The trading network is modeled as a **bipartite graph** in Neo4j:
+
+**Nodes**
+- `Representative` (blue nodes)
+- `Company` / `Stock Ticker` (red nodes)
+
+**Edges**
+- `(:Representative)-[:PURCHASED]->(:Company)`
+
+**Edge Properties**
+- `transaction_type`
+- `amount`
+- `date`
+
+##### Graph Creation Logic
+- Representatives and stock tickers are merged to prevent duplication  
+- Each transaction is stored as a relationship with contextual metadata  
+- The database is wiped and rebuilt to ensure analytical consistency  
+
+##### What This Structure Enables
+- Representative-to-representative connectivity (via shared stocks)  
+- Stock-centric trading concentration analysis  
+- Identification of cross-cluster trading pathways  
+
+---
+
+##### Betweenness Centrality: Interpretation
+
+**Algorithm Rationale**  
+Betweenness centrality measures how often a node lies on the **shortest paths** between other nodes.
+
+In the context of congressional trading:
+
+A **high-betweenness representative** may:
+- Act as a bridge between otherwise unrelated trading groups  
+- Exhibit trading behavior aligned with multiple clusters  
+- Occupy structurally critical positions in the trading network  
+
+A **high-betweenness stock ticker** may:
+- Serve as a shared asset connecting disparate politicians  
+- Indicate focal points of convergent or coordinated trading interest  
+
+##### Observed Network Patterns
+- **Blue nodes**: High-betweenness politicians, indicating potential influence or brokerage roles  
+- **Red clusters**: Isolated groups of politicians disconnected from most of the network  
+- **Green nodes**: Stocks with high betweenness across tickers but low connectivity among politicians, suggesting asset-level bridges without direct coordination  
+
+---
+
+### 4) Why Betweenness Centrality?
+
+#### Strengths
+- Rapidly surfaces **structural anomalies**
+- Effective for identifying:
+  - Hidden bridges
+  - Outliers
+  - Sub-networks of interest
+- Well-suited for exploratory analysis and hypothesis generation  
+
+#### Limitations
+- Does not explicitly incorporate time dynamics  
+- Sensitive to graph construction and edge-weighting assumptions  
+- Less effective for multi-variable causal inference  
+
+Betweenness centrality is therefore best used as a **screening and prioritization tool**, rather than a standalone indicator of wrongdoing.
+
+---
+
 #### PageRank
 
+PageRank is used to measure **node influence** within the trading network by accounting for both the quantity and quality of connections. Representatives with high PageRank scores are those connected to other influential actors, helping prioritize nodes for further review.
 
+---
 
- 
-### 3) Tools and Technology
-- psycopg2, pandas, numpy: data manipulation
-- Neo4j: Graph storage and algorithm execution
-- MongoDB: Transaction-level data persistence
-- Redis: Caching graph relationships and metrics
-- Jupyter Notebook
+## Tools and Technology
 
-### 4) Notes and Limitations
-- Similarity does not imply causality or wrongdoing
+- **psycopg2, pandas, numpy** – data manipulation, transaction shaping, and inspection  
+- **Neo4j** – graph storage and algorithm execution  
+- **MongoDB** – transaction-level data persistence  
+- **Redis** – caching graph relationships and metrics  
+- **Jupyter Notebook** – exploratory analysis and visualization  
+
+---
+
+## Notes and Limitations
+
+- Trading similarity does **not** imply causality or wrongdoing  
 - Graph-based methods are sensitive to:
-  - Edge weighting assumptions
-  - Similarity thresholds
-- Results should be interpreted as signals for further investigation, not conclusions
+  - Edge-weighting assumptions  
+  - Similarity thresholds  
+- Structural centrality ≠ unethical behavior  
+- Results should be interpreted as **signals for further investigation**, not conclusions  
+- Findings are intended to inform additional qualitative, legal, or statistical review  
+
+---
