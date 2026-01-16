@@ -72,11 +72,10 @@ Each record represents a disclosed equity transaction made by a congressional re
 
 Louvain modularity iteratively assigns nodes into communities by maximizing edge density within groups relative to the overall graph. In this project, Louvain is used to **summarize trading behavior into clusters** based on similarity across political and industry dimensions.
 
-**Graph Construction Logic**
-Representative ── traded ──> Ticker ── belongs to ──> Industry ── belongs to ──> Sector
+##### Graph Construction Logic
+`Representative` ── traded ──> `Ticker` ── belongs to ──> `Industry` ── belongs to ──> `Sector`
 
-
-**Weighting Strategy**
+##### Weighting Strategy
 A `SIMILAR_TO` edge is created between representatives based on:
 - **Political affiliation**
   - Same party
@@ -84,6 +83,7 @@ A `SIMILAR_TO` edge is created between representatives based on:
 - **Industry and sector exposure**
   - Weighted by transaction frequency
 
+##### Application:
 This enables identification of representative clusters with similar trading profiles and political alignment.
 
 ---
@@ -92,41 +92,22 @@ This enables identification of representative clusters with similar trading prof
 
 Betweenness centrality is applied as a **targeted anomaly signal**, highlighting representatives or assets that bridge otherwise weakly connected trading clusters.
 
-##### Graph Construction Process
-
+##### Graph Construction Logic
 The trading network is modeled as a **bipartite graph** in Neo4j:
+- Nodes
+  - `Representative` (blue nodes)
+  - `Company` / `Stock Ticker` (red nodes)
+- Edges
+  - `(:Representative)-[:PURCHASED]->(:Company)`
+- Edge Properties
+  - `transaction_type`
+  - `amount`
+  - `date`
 
-**Nodes**
-- `Representative` (blue nodes)
-- `Company` / `Stock Ticker` (red nodes)
-
-**Edges**
-- `(:Representative)-[:PURCHASED]->(:Company)`
-
-**Edge Properties**
-- `transaction_type`
-- `amount`
-- `date`
-
-##### Graph Creation Logic
-- Representatives and stock tickers are merged to prevent duplication  
-- Each transaction is stored as a relationship with contextual metadata  
-- The database is wiped and rebuilt to ensure analytical consistency  
-
-##### What This Structure Enables
-- Representative-to-representative connectivity (via shared stocks)  
-- Stock-centric trading concentration analysis  
-- Identification of cross-cluster trading pathways  
-
----
-
-##### Betweenness Centrality: Interpretation
-
-**Algorithm Rationale**  
+##### Application:
 Betweenness centrality measures how often a node lies on the **shortest paths** between other nodes.
 
 In the context of congressional trading:
-
 A **high-betweenness representative** may:
 - Act as a bridge between otherwise unrelated trading groups  
 - Exhibit trading behavior aligned with multiple clusters  
@@ -135,30 +116,6 @@ A **high-betweenness representative** may:
 A **high-betweenness stock ticker** may:
 - Serve as a shared asset connecting disparate politicians  
 - Indicate focal points of convergent or coordinated trading interest  
-
-##### Observed Network Patterns
-- **Blue nodes**: High-betweenness politicians, indicating potential influence or brokerage roles  
-- **Red clusters**: Isolated groups of politicians disconnected from most of the network  
-- **Green nodes**: Stocks with high betweenness across tickers but low connectivity among politicians, suggesting asset-level bridges without direct coordination  
-
----
-
-### 4) Why Betweenness Centrality?
-
-#### Strengths
-- Rapidly surfaces **structural anomalies**
-- Effective for identifying:
-  - Hidden bridges
-  - Outliers
-  - Sub-networks of interest
-- Well-suited for exploratory analysis and hypothesis generation  
-
-#### Limitations
-- Does not explicitly incorporate time dynamics  
-- Sensitive to graph construction and edge-weighting assumptions  
-- Less effective for multi-variable causal inference  
-
-Betweenness centrality is therefore best used as a **screening and prioritization tool**, rather than a standalone indicator of wrongdoing.
 
 ---
 
