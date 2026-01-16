@@ -3,8 +3,7 @@
 </p>
 
 <p align="center">
-  Check out our <a href="slides/Presentation%20-%20Project%203.pdf">presentation</a> &nbsp; | &nbsp;
-  Read our <a href="">Medium article</a>
+  Check out our <a href="slides/Presentation%20-%20Project%203.pdf">presentation</a>
 </p>
 
 # Analyzing Congressional Stock Transactions with Graph Algorithms
@@ -108,6 +107,7 @@ The trading network is modeled as a **bipartite graph** in Neo4j:
 Betweenness centrality measures how often a node lies on the **shortest paths** between other nodes.
 
 In the context of congressional trading:
+
 A **high-betweenness representative** may:
 - Act as a bridge between otherwise unrelated trading groups  
 - Exhibit trading behavior aligned with multiple clusters  
@@ -122,6 +122,30 @@ A **high-betweenness stock ticker** may:
 #### PageRank
 
 PageRank is used to measure **node influence** within the trading network by accounting for both the quantity and quality of connections. Representatives with high PageRank scores are those connected to other influential actors, helping prioritize nodes for further review.
+
+##### Graph Construction Logic
+- Nodes
+  - Representative
+    - Properties: name, party, state
+- Stock
+  - Properties: ticker, sector
+- Edges
+  - (:Representative)-[:TRANSACTED]->(:Stock)
+    - Treated as undirected for PageRank
+    - Edge weight: max_amount (aggregated transaction amount)
+
+##### Application
+In the context of congressional trading:
+
+A high-PageRank representative:
+- Trades with stocks that are widely traded by other influential representatives
+- Is embedded in highly connected and information-dense regions of the network
+- May exert outsized structural influence even without acting as a bridge
+
+A high-PageRank stock:
+- Is commonly traded by influential representatives
+- Serves as a focal asset within the congressional trading ecosystem
+- May indicate sectors or companies attracting disproportionate political attention
 
 ---
 
