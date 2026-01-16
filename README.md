@@ -121,7 +121,7 @@ A **high-betweenness stock ticker** may:
 
 #### PageRank
 
-PageRank is used to measure **node influence** within the trading network by accounting for both the quantity and quality of connections. Representatives with high PageRank scores are those connected to other influential actors, helping prioritize nodes for further review.
+PageRank is used to measure **node influence** within the trading network by accounting for both the quantity and quality of connections.
 
 ##### Graph Construction Logic
 - Nodes
