@@ -137,16 +137,34 @@ PageRank is used to measure **node influence** within the trading network by acc
 ##### Application
 In the context of congressional trading:
 
-A high-PageRank representative:
-- Trades with stocks that are widely traded by other influential representatives
-- Is embedded in highly connected and information-dense regions of the network
-- May exert outsized structural influence even without acting as a bridge
+**High-PageRank Representatives**
+
+- A high PageRank score for a representative can sometimes be misleading.
+- In certain cases, a representative may achieve a high rank by **trading a single highly connected stock intensively**, rather than by being broadly influential across the network.
+- This phenomenon resembles a **Rank Sink** issue, where influence is artificially amplified due to repeated interactions with one dominant node.
+- As a result, a high PageRank score does **not always reflect genuine diversification or systemic trading importance**, and should be interpreted alongside betweenness and community-based metrics.
+
 
 A high-PageRank stock:
-- Is commonly traded by influential representatives
-- Serves as a focal asset within the congressional trading ecosystem
-- May indicate sectors or companies attracting disproportionate political attention
+- Stocks with high PageRank scores tend to cluster within **popular and capital-intensive sectors**, ranked as follows:
+  1. Technology  
+  2. Healthcare  
+  3. Finance  
+  4. Consumer Services  
 
+- The most influential stocks by **traded volume and network prominence** include:
+  - **AAPL**
+  - **MSFT**
+  - **AMZN**
+  - **DIS**
+
+- Stocks most frequently appearing across the top rankings:
+  - **AAPL**
+  - **ABBV**
+  - **AMZN**
+  - **GE**
+  - **MSFT**
+  - **TSLA**
 ---
 
 ## Tools and Technology
